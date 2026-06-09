@@ -51,7 +51,7 @@ export function FloatingInput({
         }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className={cn(
-          "w-full rounded-xl bg-slate-950/50 px-3.5 pb-2.5 pt-5 text-sm text-slate-100 outline-none"
+          "w-full rounded-xl bg-slate-950/50 px-3.5 pb-2.5 pt-5 text-sm text-slate-50 outline-none"
         )}
       />
     </div>

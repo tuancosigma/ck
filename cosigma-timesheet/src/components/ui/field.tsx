@@ -5,7 +5,7 @@
 import { cn } from "@/lib/cn";
 
 const base =
-  "w-full rounded-xl bg-slate-950/50 border border-white/10 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 input-glow transition-colors";
+  "field-control w-full rounded-xl bg-slate-950/50 border border-white/10 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 input-glow transition-colors";
 
 export function Input(
   props: React.InputHTMLAttributes<HTMLInputElement> & { className?: string }

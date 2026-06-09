@@ -22,7 +22,13 @@ const TABS = [
 
 const TARGET = 8;
 
-export function HoursBarChart({ data }: { data: Day[] }) {
+export function HoursBarChart({
+  data,
+  onBarClick,
+}: {
+  data: Day[];
+  onBarClick?: (date: string) => void;
+}) {
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("period");
 
   const days = tab === "recent" ? data.slice(-10) : data;
@@ -62,7 +68,13 @@ export function HoursBarChart({ data }: { data: Day[] }) {
           const totalPct = (d.hours / max) * 100;
           const onsitePct = d.hours > 0 ? (d.onsite / d.hours) * 100 : 0;
           return (
-            <div key={d.date} className="group flex flex-1 flex-col items-center gap-1">
+            <button
+              key={d.date}
+              type="button"
+              onClick={() => onBarClick?.(d.date)}
+              title="Open this day in My Timesheet"
+              className="group flex flex-1 cursor-pointer flex-col items-center gap-1"
+            >
               <div className="relative flex w-full flex-1 items-end">
                 <motion.div
                   layout
@@ -88,7 +100,7 @@ export function HoursBarChart({ data }: { data: Day[] }) {
                 </motion.div>
               </div>
               <span className="text-[9px] text-slate-500">{day.getDate()}</span>
-            </div>
+            </button>
           );
         })}
       </div>

@@ -1,20 +1,17 @@
 "use client";
 
-import {
-  Clock,
-  FileEdit,
-  CalendarOff,
-  Plane,
-  AlertTriangle,
-  Building2,
-} from "lucide-react";
-import { PageContainer, StaggerList } from "@/components/ui/motion";
+import { useRouter } from "next/navigation";
+
+import { Clock, FileEdit, Plane, AlertTriangle, Building2 } from "lucide-react";
+import { PageContainer, StaggerList, StaggerItem } from "@/components/ui/motion";
 import { GlassCard } from "@/components/ui/glass-card";
 import { RadialGauge } from "@/components/ui/radial-gauge";
 import { Badge, statusTone } from "@/components/ui/badge";
 import { KpiCard } from "@/components/dashboard/kpi-card";
 import { HoursBarChart } from "@/components/dashboard/hours-bar-chart";
 import { MicroWarnings } from "@/components/dashboard/micro-warnings";
+import { GsapReveal } from "@/components/ui/gsap-reveal";
+import { AttendanceHeatmap } from "@/components/timesheet/attendance-heatmap";
 import { fmtDate, fmtHours, fmtPct } from "@/lib/format";
 import type { DashboardData } from "@/lib/data/dashboard";
 
@@ -26,6 +23,11 @@ export function DashboardView({
   userName: string;
 }) {
   const c = data.compliance;
+  const router = useRouter();
+
+  // Clicking a chart bar jumps to that day on the timesheet page.
+  const onBarClick = (date: string) => router.push(`/timesheet?date=${date}`);
+
   return (
     <PageContainer className="space-y-6">
       <MicroWarnings warnings={data.warnings} />
@@ -137,42 +139,52 @@ export function DashboardView({
         </GlassCard>
       </div>
 
+      {/* Attendance heatmap */}
+      <GsapReveal>
+        <GlassCard className="p-6">
+          <AttendanceHeatmap data={data.heatmap} />
+        </GlassCard>
+      </GsapReveal>
+
       {/* Hours bar chart */}
-      <GlassCard className="p-6">
-        <HoursBarChart data={data.dailyHours} />
-      </GlassCard>
+      <GsapReveal>
+        <GlassCard className="p-6">
+          <HoursBarChart data={data.dailyHours} onBarClick={onBarClick} />
+        </GlassCard>
+      </GsapReveal>
 
       {/* Recent entries */}
-      <GlassCard className="p-6">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
-          Recent Activity
-        </h2>
+      <GsapReveal>
+        <GlassCard className="p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Recent Activity
+          </h2>
         {data.recentEntries.length === 0 ? (
           <p className="text-sm text-slate-500">No entries yet this period.</p>
         ) : (
           <StaggerList className="space-y-2">
             {data.recentEntries.map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-all duration-300 hover:border-indigo-500/40 hover:bg-white/[0.04]"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">
-                    {e.project}
-                  </p>
-                  <p className="truncate text-xs text-slate-500">
-                    {e.customer} · {fmtDate(e.workDate)}
-                  </p>
+              <StaggerItem key={e.id}>
+                <div className="gradient-border flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-all duration-300 hover:bg-white/[0.04]">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {e.project}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {e.customer} · {fmtDate(e.workDate)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-slate-300">{fmtHours(e.hours)}</span>
+                    <Badge tone={statusTone(e.status)}>{e.status}</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-slate-300">{fmtHours(e.hours)}</span>
-                  <Badge tone={statusTone(e.status)}>{e.status}</Badge>
-                </div>
-              </div>
+              </StaggerItem>
             ))}
           </StaggerList>
         )}
-      </GlassCard>
+        </GlassCard>
+      </GsapReveal>
     </PageContainer>
   );
 }

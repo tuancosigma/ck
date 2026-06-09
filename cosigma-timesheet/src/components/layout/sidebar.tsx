@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,7 +12,6 @@ import {
   FileBarChart,
   LogOut,
   ChevronLeft,
-  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { initials } from "@/lib/format";
@@ -51,9 +51,20 @@ export function Sidebar({ user }: { user: SessionUser }) {
     >
       {/* Brand */}
       <div className="mb-8 flex items-center gap-3 px-2">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 glow-indigo">
-          <Clock size={20} className="text-white" />
-        </div>
+        <motion.div
+          whileHover={{ rotate: 8, scale: 1.08 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          className="shrink-0"
+        >
+          <Image
+            src="/brand/cosigma-logo-transparent.png"
+            alt="Cosigma logo"
+            width={40}
+            height={40}
+            priority
+            className="drop-shadow-[0_0_6px_rgba(99,102,241,0.4)] transition-all duration-300 hover:drop-shadow-[0_0_14px_rgba(99,102,241,0.75)]"
+          />
+        </motion.div>
         <AnimatePresence>
           {!collapsed && (
             <motion.span

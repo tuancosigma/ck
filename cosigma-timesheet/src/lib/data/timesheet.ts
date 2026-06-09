@@ -6,6 +6,7 @@ import { dec } from "@/lib/format";
 import {
   getPayrollPeriod,
   eachDay,
+  eachDateKey,
   toDateKey,
   isWeekend,
 } from "@/lib/payroll-period";
@@ -84,16 +85,13 @@ export async function getTimesheetPageData(
   const byDay = new Map<string, (typeof rawEntries)[number][]>();
   for (const e of rawEntries) {
     const key = toDateKey(e.workDate);
-    (byDay.get(key) ?? byDay.set(key, []).get(key)!).push(e);
+    const dayEntries = byDay.get(key);
+    if (dayEntries) dayEntries.push(e);
+    else byDay.set(key, [e]);
   }
   const leaveDays = new Set<string>();
   for (const lv of leaves) {
-    const cur = new Date(lv.startDate);
-    const end = new Date(lv.endDate);
-    while (cur <= end) {
-      leaveDays.add(toDateKey(cur));
-      cur.setDate(cur.getDate() + 1);
-    }
+    for (const key of eachDateKey(lv.startDate, lv.endDate)) leaveDays.add(key);
   }
 
   const todayKey = toDateKey(new Date());

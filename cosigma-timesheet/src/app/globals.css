@@ -109,3 +109,149 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* Ken Burns: slow cinematic zoom/pan loop for the login background image. */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.22) translate3d(-2%, -1.5%, 0);
+  }
+  100% {
+    transform: scale(1.08) translate3d(0, 0, 0);
+  }
+}
+.ken-burns {
+  animation: ken-burns 36s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Slowly rotating multicolour glow ring behind the brand logo (echoes the
+   compliance-ring motif of the Cosigma mark). */
+@keyframes logo-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.logo-ring::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    #6366f1,
+    #a855f7,
+    #06b6d4,
+    #22c55e,
+    #f97316,
+    #ef4444,
+    #6366f1
+  );
+  filter: blur(9px);
+  opacity: 0.55;
+  z-index: -1;
+  animation: logo-ring-spin 9s linear infinite;
+}
+
+/* Responsive gradient hairline border that lights up on hover. Uses a masked
+   padding-box so only the 1px frame is painted. */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    130deg,
+    rgba(99, 102, 241, 0.7),
+    rgba(168, 85, 247, 0.2),
+    rgba(6, 182, 212, 0.6)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.gradient-border:hover::after {
+  opacity: 1;
+}
+
+/* Accessibility: honour reduced-motion by stopping looping ambient animations. */
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns,
+  .logo-ring::before,
+  .halo-pulse,
+  .input-glow:focus {
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * LIGHT THEME
+ * Activated by the `.light` class on <html>. Compound selectors
+ * (e.g. `.light .text-white`) outrank the dark-first single-class
+ * Tailwind utilities, so the existing markup adapts without edits.
+ * ------------------------------------------------------------------ */
+html.light {
+  color-scheme: light;
+  background-color: #eef2f7;
+  color: #1e293b;
+}
+
+.light body {
+  background-color: #eef2f7;
+  color: #1e293b;
+  background-image:
+    radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 10%, rgba(139, 92, 246, 0.1), transparent 55%),
+    radial-gradient(40rem 40rem at 50% 120%, rgba(16, 185, 129, 0.08), transparent 60%);
+}
+
+/* Light glassmorphism surfaces. */
+.light .glass {
+  background-color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 18px 40px -22px rgba(15, 23, 42, 0.25),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+.light .glass-strong {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* Text remaps. Exclude <button> so gradient-filled buttons keep light text. */
+.light :is(.text-white):not(button) {
+  color: #0f172a;
+}
+.light :is(.text-slate-100, .text-slate-200, .text-slate-300):not(button) {
+  color: #334155;
+}
+.light :is(.text-slate-400, .text-slate-500):not(button) {
+  color: #64748b;
+}
+
+/* Themed form controls (the shared `.field-control` base in field.tsx). */
+.light .field-control {
+  background-color: rgba(255, 255, 255, 0.65);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #1e293b;
+}
+.light .field-control::placeholder {
+  color: #94a3b8;
+}
+
+/* Soft borders read better than near-white hairlines on a light surface. */
+.light .border-white\/5,
+.light .border-white\/10 {
+  border-color: rgba(15, 23, 42, 0.08);
+}

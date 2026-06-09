@@ -113,3 +113,15 @@ export function fromDateKey(key: string): Date {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
+
+/** Inclusive YYYY-MM-DD keys for every calendar day from start to end. */
+export function eachDateKey(start: Date, end: Date): string[] {
+  const keys: string[] = [];
+  const cursor = startOfDay(new Date(start));
+  const last = startOfDay(new Date(end));
+  while (cursor <= last) {
+    keys.push(toDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return keys;
+}

@@ -17,7 +17,7 @@ export function GlassCard({
   const base = cn(
     "glass rounded-2xl",
     interactive &&
-      "transition-all duration-300 hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.15)]",
+      "gradient-border transition-all duration-300 hover:shadow-[0_0_24px_rgba(99,102,241,0.18)]",
     className
   );
 

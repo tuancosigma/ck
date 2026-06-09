@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Save, Send, Loader2, AlertCircle, Building2, Home, Blend, Zap } from "lucide-react";
+import { Save, Send, Loader2, AlertCircle, Building2, Home, Blend, Zap, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Select, Label } from "@/components/ui/field";
 import { Badge, statusTone } from "@/components/ui/badge";
@@ -35,18 +35,52 @@ export function EntryForm({
   lastProjectId: string | null;
   onSaved: () => void;
 }) {
-  const [projectId, setProjectId] = useState("");
-  const [hours, setHours] = useState(8);
-  const [workMode, setWorkMode] = useState(defaultWorkMode);
-  const [onsiteHours, setOnsiteHours] = useState(0);
-  const [remoteHours, setRemoteHours] = useState(8);
-  const [taskType, setTaskType] = useState("DEVELOPMENT");
-  const [description, setDescription] = useState("");
-  const [isOvertime, setIsOvertime] = useState(false);
-  const [isBillable, setIsBillable] = useState(true);
+  // State seeds from props. The parent re-keys this component per selected day /
+  // entry, so these initializers re-run on switch — no reset effect needed.
+  const [projectId, setProjectId] = useState(
+    existing?.projectId ?? lastProjectId ?? projects[0]?.projectId ?? ""
+  );
+  const [hours, setHours] = useState(existing?.hours ?? 8);
+  const [workMode, setWorkMode] = useState(existing?.workMode ?? defaultWorkMode);
+  const [onsiteHours, setOnsiteHours] = useState(
+    existing?.onsiteHours ?? (defaultWorkMode === "ONSITE" ? 8 : 0)
+  );
+  const [remoteHours, setRemoteHours] = useState(
+    existing?.remoteHours ?? (defaultWorkMode === "ONSITE" ? 0 : 8)
+  );
+  const [taskType, setTaskType] = useState(existing?.taskType ?? "DEVELOPMENT");
+  const [description, setDescription] = useState(existing?.description ?? "");
+  const [isOvertime, setIsOvertime] = useState(existing?.isOvertime ?? false);
+  const [isBillable, setIsBillable] = useState(existing?.isBillable ?? true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState<"draft" | "submit" | null>(null);
   const [flash, setFlash] = useState(0); // bump to replay a quick-fill pulse
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFlash, setAiFlash] = useState(0); // bump to replay the AI slide-down
+
+  // Expand brief notes into a polished worklog via the AI/local endpoint.
+  async function generateWorklog() {
+    if (!description.trim() || aiLoading) return;
+    setAiLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/suggest-worklog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: description }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.text) {
+        setDescription(data.text);
+        setAiFlash((f) => f + 1);
+      } else {
+        setError(data.error ?? "Could not generate description.");
+      }
+    } catch {
+      setError("Could not generate description.");
+    }
+    setAiLoading(false);
+  }
 
   function applyPreset(p: (typeof PRESETS)[number]) {
     setWorkMode(p.mode);
@@ -57,42 +91,12 @@ export function EntryForm({
     setFlash((f) => f + 1);
   }
 
-  // Load existing entry or apply smart auto-fill defaults when the day changes.
-  useEffect(() => {
-    setError("");
-    if (existing) {
-      setProjectId(existing.projectId);
-      setHours(existing.hours);
-      setWorkMode(existing.workMode);
-      setOnsiteHours(existing.onsiteHours);
-      setRemoteHours(existing.remoteHours);
-      setTaskType(existing.taskType);
-      setDescription(existing.description ?? "");
-      setIsOvertime(existing.isOvertime);
-      setIsBillable(existing.isBillable);
-    } else {
-      setProjectId(lastProjectId ?? projects[0]?.projectId ?? "");
-      setHours(8);
-      setWorkMode(defaultWorkMode);
-      setOnsiteHours(defaultWorkMode === "ONSITE" ? 8 : 0);
-      setRemoteHours(defaultWorkMode === "ONSITE" ? 0 : 8);
-      setTaskType("DEVELOPMENT");
-      setDescription("");
-      setIsOvertime(false);
-      setIsBillable(true);
-    }
-  }, [selectedDate, existing, defaultWorkMode, lastProjectId, projects]);
-
-  // Keep the onsite/remote split consistent with the selected mode + total.
-  useEffect(() => {
-    if (workMode === "WFH") {
-      setOnsiteHours(0);
-      setRemoteHours(hours);
-    } else if (workMode === "ONSITE") {
-      setOnsiteHours(hours);
-      setRemoteHours(0);
-    }
-  }, [workMode, hours]);
+  // Onsite/remote split: HYBRID is user-edited; WFH/ONSITE derive from total.
+  function resolveSplit() {
+    if (workMode === "WFH") return { onsiteHours: 0, remoteHours: hours };
+    if (workMode === "ONSITE") return { onsiteHours: hours, remoteHours: 0 };
+    return { onsiteHours, remoteHours };
+  }
 
   const splitMismatch =
     workMode === "HYBRID" && Math.abs(onsiteHours + remoteHours - hours) > 0.01;
@@ -104,6 +108,7 @@ export function EntryForm({
       return setError("Onsite + remote hours must equal total hours.");
 
     setSaving(status === "DRAFT" ? "draft" : "submit");
+    const split = resolveSplit();
     const res = await fetch("/api/timesheet", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -113,8 +118,8 @@ export function EntryForm({
         workDate: selectedDate,
         hours,
         workMode,
-        onsiteHours,
-        remoteHours,
+        onsiteHours: split.onsiteHours,
+        remoteHours: split.remoteHours,
         taskType,
         description,
         isOvertime,
@@ -248,13 +253,36 @@ export function EntryForm({
       </div>
 
       <div>
-        <Label>Description</Label>
-        <Textarea
-          rows={2}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="What did you work on?"
-        />
+        <div className="mb-1.5 flex items-center justify-between">
+          <Label className="mb-0">Description</Label>
+          <motion.button
+            type="button"
+            onClick={generateWorklog}
+            disabled={aiLoading || !description.trim()}
+            whileTap={{ scale: 0.92 }}
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-indigo-300 transition-colors hover:text-indigo-200 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Sparkles
+              size={13}
+              className={aiLoading ? "animate-spin text-violet-400" : ""}
+            />
+            {aiLoading ? "Polishing…" : "AI polish"}
+          </motion.button>
+        </div>
+        <motion.div
+          key={aiFlash}
+          initial={aiFlash ? { opacity: 0, y: -8 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          <Textarea
+            rows={2}
+            value={description}
+            disabled={aiLoading}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What did you work on? e.g. fixed login, team meeting"
+          />
+        </motion.div>
       </div>
 
       <div className="flex flex-wrap gap-4 text-sm text-slate-300">

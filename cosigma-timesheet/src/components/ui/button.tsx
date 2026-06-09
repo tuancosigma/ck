@@ -37,7 +37,7 @@ export function Button({
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       disabled={disabled}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+        "gradient-border inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
         variants[variant],
         className
       )}

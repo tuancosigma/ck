@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays } from "lucide-react";
 import { PageContainer, StaggerList, StaggerItem } from "@/components/ui/motion";
@@ -10,18 +10,44 @@ import { CalendarGrid } from "@/components/timesheet/calendar-grid";
 import { EntryForm } from "@/components/timesheet/entry-form";
 import { fmtDate, fmtHours } from "@/lib/format";
 import { toDateKey } from "@/lib/payroll-period";
+import { cn } from "@/lib/cn";
 import type { TimesheetPageData } from "@/lib/data/timesheet";
 
-export function TimesheetView({ data }: { data: TimesheetPageData }) {
+export function TimesheetView({
+  data,
+  initialDate,
+}: {
+  data: TimesheetPageData;
+  initialDate?: string;
+}) {
   const router = useRouter();
 
-  // Default selection: today if inside the period, else the most recent day.
+  // A ?date= param (e.g. from the dashboard chart) preselects that day.
+  const deepLinked =
+    initialDate && data.days.some((d) => d.date === initialDate)
+      ? initialDate
+      : null;
+
+  // Default selection: deep-linked day, else today, else the most recent day.
   const todayKey = toDateKey(new Date());
-  const initial = data.days.some((d) => d.date === todayKey)
-    ? todayKey
-    : data.days[data.days.length - 1]?.date ?? todayKey;
+  const initial =
+    deepLinked ??
+    (data.days.some((d) => d.date === todayKey)
+      ? todayKey
+      : data.days[data.days.length - 1]?.date ?? todayKey);
 
   const [selected, setSelected] = useState(initial);
+  const [pulse, setPulse] = useState(!!deepLinked);
+
+  // On a deep link, scroll the form into view and let the pulse ring fade out.
+  useEffect(() => {
+    if (!deepLinked) return;
+    document
+      .getElementById("entry-form")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => setPulse(false), 1400);
+    return () => clearTimeout(t);
+  }, [deepLinked]);
 
   const existing = useMemo(
     () => data.entries.find((e) => e.workDate === selected) ?? null,
@@ -85,9 +111,16 @@ export function TimesheetView({ data }: { data: TimesheetPageData }) {
         </div>
 
         {/* Smart entry form (right, sticky) */}
-        <div className="lg:col-span-2">
-          <GlassCard className="sticky top-8 p-6">
+        <div id="entry-form" className="lg:col-span-2">
+          <GlassCard
+            className={cn(
+              "sticky top-8 p-6 transition-shadow duration-500",
+              pulse &&
+                "ring-2 ring-indigo-400 shadow-[0_0_34px_rgba(99,102,241,0.55)]"
+            )}
+          >
             <EntryForm
+              key={`${selected}-${existing?.id ?? "new"}-${existing?.status ?? ""}`}
               selectedDate={selected}
               existing={existing}
               projects={data.projects}

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Clock } from "lucide-react";
 import { FloatingInput } from "@/components/login/floating-input";
 import {
   MorphSubmitButton,
@@ -66,18 +66,25 @@ export function LoginForm() {
     >
       <div className="mb-8 flex flex-col items-center text-center">
         <motion.div
-          initial={{ scale: 0, rotate: -45 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.1 }}
-          className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 glow-indigo"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 200, damping: 13, delay: 0.1 }}
+          className="logo-ring relative mb-5"
         >
-          <Clock size={28} className="text-white" />
+          <Image
+            src="/brand/cosigma-logo-transparent.png"
+            alt="Cosigma logo"
+            width={88}
+            height={88}
+            priority
+            className="drop-shadow-[0_0_18px_rgba(168,85,247,0.5)]"
+          />
         </motion.div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-50">
           <span className="gradient-text">Cosigma</span> Timesheet
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Premium time tracking & onsite compliance
+        <p className="mt-2 text-sm font-light tracking-wide text-slate-300/80">
+          Premium time tracking &amp; onsite compliance
         </p>
       </div>
 
