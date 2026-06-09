@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --color-background: #020617;
+  --color-foreground: #e2e8f0;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #020617; /* slate-950 */
+  color: #e2e8f0;
+  font-family: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Ambient app background: layered radial glows over deep slate. */
+body {
+  background-image:
+    radial-gradient(60rem 60rem at 110% -10%, rgba(99, 102, 241, 0.12), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 10%, rgba(139, 92, 246, 0.1), transparent 55%),
+    radial-gradient(40rem 40rem at 50% 120%, rgba(16, 185, 129, 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Frosted glass surface used by cards & panels. */
+.glass {
+  background-color: rgba(15, 23, 42, 0.6); /* slate-900/60 */
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 20px 50px -20px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.glass-strong {
+  background-color: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle inner glow accent. */
+.glow-indigo {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.25);
+}
+.glow-emerald {
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.25);
+}
+.glow-rose {
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.25);
+}
+
+/* Breathing pulse halo for warning badges. */
+@keyframes halo-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(244, 63, 94, 0);
+  }
+}
+.halo-pulse {
+  animation: halo-pulse 2s ease-in-out infinite;
+}
+
+/* Pulsing focus ring for inputs. */
+@keyframes focus-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5), 0 0 12px rgba(99, 102, 241, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.8), 0 0 20px rgba(99, 102, 241, 0.45);
+  }
+}
+.input-glow:focus {
+  outline: none;
+  animation: focus-glow 2.2s ease-in-out infinite;
+  border-color: rgba(99, 102, 241, 0.6);
+}
+
+/* Custom scrollbar. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.45);
+  background-clip: content-box;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

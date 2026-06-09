@@ -1,0 +1,195 @@
+// Cosigma Timesheet - Prisma schema (MySQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum ProjectType {
+  INTERNAL
+  EXTERNAL
+}
+
+enum TaskType {
+  DEVELOPMENT
+  MEETING
+  BUG_FIX
+  CODE_REVIEW
+  TESTING
+  DOCUMENTATION
+  SUPPORT
+  OTHER
+}
+
+enum WorkMode {
+  WFH
+  ONSITE
+  HYBRID
+}
+
+enum TimesheetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  ANNUAL_LEAVE
+  UNPAID_LEAVE
+  SICK_LEAVE
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EMPLOYEE)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Default values to drive smart auto-fill on the timesheet form
+  defaultWorkMode WorkMode @default(HYBRID)
+
+  assignments     UserProjectAssignment[]
+  timesheetEntries TimesheetEntry[]
+  leaveBalances   LeaveBalance[]
+  leaveRequests   LeaveRequest[]
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects         Project[]
+  assignments      UserProjectAssignment[]
+  timesheetEntries TimesheetEntry[]
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  customerId  String
+  name        String
+  code        String      @unique
+  type        ProjectType @default(EXTERNAL)
+  description String?     @db.Text
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer         Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignments      UserProjectAssignment[]
+  timesheetEntries TimesheetEntry[]
+
+  @@index([customerId])
+}
+
+model UserProjectAssignment {
+  id         String    @id @default(cuid())
+  userId     String
+  projectId  String
+  customerId String
+  startDate  DateTime
+  endDate    DateTime?
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([customerId])
+}
+
+model TimesheetEntry {
+  id          String          @id @default(cuid())
+  userId      String
+  customerId  String
+  projectId   String
+  workDate    DateTime
+  hours       Decimal         @db.Decimal(5, 2)
+  description String?         @db.Text
+  taskType    TaskType        @default(DEVELOPMENT)
+  workMode    WorkMode        @default(HYBRID)
+  onsiteHours Decimal         @default(0) @db.Decimal(5, 2)
+  remoteHours Decimal         @default(0) @db.Decimal(5, 2)
+  isBillable  Boolean         @default(true)
+  isOvertime  Boolean         @default(false)
+  status      TimesheetStatus @default(DRAFT)
+  reviewNote  String?         @db.Text
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([customerId])
+  @@index([workDate])
+}
+
+model LeaveBalance {
+  id                             String   @id @default(cuid())
+  userId                         String
+  leaveYear                      Int
+  carriedForwardFromPreviousYear Decimal  @default(0) @db.Decimal(5, 2)
+  accruedDays                    Decimal  @default(0) @db.Decimal(5, 2)
+  usedDays                       Decimal  @default(0) @db.Decimal(5, 2)
+  remainingDays                  Decimal  @default(0) @db.Decimal(5, 2)
+  lastResetDate                  DateTime?
+  createdAt                      DateTime @default(now())
+  updatedAt                      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, leaveYear])
+  @@index([userId])
+}
+
+model LeaveRequest {
+  id        String      @id @default(cuid())
+  userId    String
+  startDate DateTime
+  endDate   DateTime
+  totalDays Decimal     @db.Decimal(5, 2)
+  leaveType LeaveType   @default(ANNUAL_LEAVE)
+  status    LeaveStatus @default(PENDING)
+  reason    String?     @db.Text
+  isHalfDay Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([startDate])
+}
