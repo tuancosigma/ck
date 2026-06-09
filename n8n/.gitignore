@@ -1,0 +1,21 @@
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# TypeScript and build outputs
+dist/
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local agent/tool caches accidentally copied into the project
+.claude/
+
+# Logs
+*.log
+

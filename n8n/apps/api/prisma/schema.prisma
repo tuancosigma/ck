@@ -1,0 +1,171 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum WorkflowStatus {
+  INACTIVE
+  ACTIVE
+}
+
+enum ExecutionStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum StepStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+model User {
+  id            String            @id @default(uuid())
+  email         String            @unique
+  passwordHash  String
+  name          String?
+  memberships   WorkspaceMember[]
+  auditLogs     AuditLog[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+model Workspace {
+  id          String            @id @default(uuid())
+  name        String
+  members     WorkspaceMember[]
+  workflows   Workflow[]
+  credentials Credential[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role      @default(MEMBER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, userId])
+}
+
+model Workflow {
+  id             String            @id @default(uuid())
+  workspaceId    String
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  status         WorkflowStatus    @default(INACTIVE)
+  activeVersion  Int               @default(1)
+  versions       WorkflowVersion[]
+  executions     Execution[]
+  webhooks       WebhookEndpoint[]
+  cronSchedules  CronSchedule[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model WorkflowVersion {
+  id          String     @id @default(uuid())
+  workflowId  String
+  workflow    Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  version     Int
+  graph       Json       // Saves { nodes: Node[], edges: Edge[] }
+  createdAt   DateTime   @default(now())
+
+  @@unique([workflowId, version])
+}
+
+model Credential {
+  id             String    @id @default(uuid())
+  workspaceId    String
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name           String
+  type           String    // e.g. "smtp", "postgres"
+  encryptedData  String    // AES-256-GCM encrypted JSON
+  iv             String
+  tag            String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Execution {
+  id          String          @id @default(uuid())
+  workflowId  String
+  workflow    Workflow        @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  version     Int
+  status      ExecutionStatus @default(QUEUED)
+  triggerType String          // "manual", "cron", "webhook"
+  steps       ExecutionStep[]
+  error       String?
+  createdAt   DateTime        @default(now())
+  finishedAt  DateTime?
+}
+
+model ExecutionStep {
+  id          String      @id @default(uuid())
+  executionId String
+  execution   Execution   @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  nodeId      String
+  nodeName    String
+  nodeType    String
+  status      StepStatus
+  input       Json?       // Input data mapped or received
+  output      Json?       // Output produced by the node
+  error       Json?       // Details of the error if failed
+  durationMs  Int?        // Null while node is RUNNING, set on completion
+  startedAt   DateTime?   // Set when node_started event fires
+  createdAt   DateTime    @default(now())
+
+  @@unique([executionId, nodeId])
+}
+
+model WebhookEndpoint {
+  id          String    @id @default(uuid())
+  workflowId  String
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  webhookPath String    @unique // Auto-generated secure path
+  secret      String
+  syncMode    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model CronSchedule {
+  id          String    @id @default(uuid())
+  workflowId  String
+  workflow    Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  cron        String    // e.g. "*/5 * * * *"
+  timezone    String    @default("UTC")
+  bullJobId   String?   // Store reference to BullMQ repeatable job ID
+  createdAt   DateTime  @default(now())
+}
+
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String    // e.g. "WORKFLOW_CREATE", "CREDENTIAL_UPDATE"
+  entityType  String    // "WORKFLOW", "CREDENTIAL"
+  entityId    String
+  workspaceId String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+}

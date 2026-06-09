@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Inter+Tight:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    /* Base palette */
+    --bg-base:      10 13 20;       /* #0a0d14 — deepest background */
+    --bg-elevated:  15 19 30;       /* #0f131e — card surface */
+    --bg-overlay:   20 25 40;       /* #141928 — hover / selected */
+
+    /* Semantic tokens (HSL for Tailwind compat) */
+    --background:      224 28% 6%;
+    --foreground:      215 25% 92%;
+
+    --card:            224 30% 9%;
+    --card-foreground: 213 25% 91%;
+
+    --muted:           220 22% 13%;
+    --muted-foreground: 218 14% 52%;
+
+    --popover:         224 30% 8%;
+    --popover-foreground: 213 25% 91%;
+
+    --border:          218 20% 16%;
+    --input:           218 20% 16%;
+
+    --primary:         16 90% 55%;   /* orange #F25E22 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary:       220 22% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --accent:          218 20% 17%;
+    --accent-foreground: 210 40% 97%;
+
+    --destructive:     0 68% 44%;
+    --destructive-foreground: 0 0% 100%;
+
+    --ring: 16 90% 55%;
+    --radius: 0.75rem;
+
+    /* Status palette */
+    --success:    142 71% 45%;
+    --warning:    38 92% 50%;
+    --error:      0 84% 60%;
+    --info:       213 94% 68%;
+
+    /* Chart colors */
+    --chart-1: 16 90% 55%;    /* orange */
+    --chart-2: 142 71% 45%;   /* emerald */
+    --chart-3: 0 84% 60%;     /* red */
+    --chart-4: 213 94% 68%;   /* blue */
+    --chart-5: 271 81% 66%;   /* purple */
+    --chart-6: 38 92% 50%;    /* amber */
+
+    /* Violet accent — supplementary to orange primary */
+    --violet:     262 83% 58%;
+    --violet-dim: 262 60% 45%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   BASE STYLES
+═══════════════════════════════════════════════════════ */
+@layer base {
+  * { @apply border-border box-border; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+    font-variation-settings: 'opsz' 32;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Inter Tight', 'Inter', sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Tabular numbers for data */
+  .tabular { font-variant-numeric: tabular-nums; font-family: 'JetBrains Mono', monospace; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   COMPONENT LIBRARY
+═══════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Stat / KPI Cards ── */
+  .stat-card {
+    background: linear-gradient(135deg,
+      rgba(20, 25, 40, 0.9) 0%,
+      rgba(15, 19, 30, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .stat-card:hover {
+    border-color: rgba(242, 94, 34, 0.2);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 8px 30px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(242, 94, 34, 0.08);
+    transform: translateY(-1px);
+  }
+
+  /* ── Glass Panel ── */
+  .glass-panel {
+    background: rgba(15, 19, 30, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* ── Legacy alias ── */
+  .glass-card { @apply glass-panel; }
+  .glass-card:hover {
+    border-color: rgba(242, 94, 34, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  /* ── Data Table ── */
+  .data-table { @apply w-full text-left border-collapse; }
+  .data-table thead tr {
+    @apply border-b border-border;
+  }
+  .data-table thead th {
+    @apply py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest select-none;
+  }
+  .data-table tbody tr {
+    @apply border-b border-border/30 transition-colors duration-150;
+  }
+  .data-table tbody tr:last-child { @apply border-b-0; }
+  .data-table tbody tr:hover { @apply bg-white/[0.02]; }
+  .data-table tbody td { @apply py-3 text-xs; }
+
+  /* ── Badges ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border;
+  }
+  .badge-success { @apply bg-emerald-500/10 text-emerald-400 border-emerald-500/20; }
+  .badge-warning { @apply bg-amber-500/10 text-amber-400 border-amber-500/20; }
+  .badge-error   { @apply bg-red-500/10 text-red-400 border-red-500/20; }
+  .badge-info    { @apply bg-blue-500/10 text-blue-400 border-blue-500/20; }
+  .badge-neutral { @apply bg-slate-500/10 text-slate-400 border-slate-500/20; }
+  .badge-purple  { @apply bg-purple-500/10 text-purple-400 border-purple-500/20; }
+  .badge-primary { @apply bg-primary/10 text-primary border-primary/20; }
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    @apply h-1 rounded-full bg-border overflow-hidden;
+  }
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  /* ── Section Header ── */
+  .section-header {
+    @apply flex items-center justify-between mb-5;
+  }
+  .section-title {
+    @apply text-sm font-bold text-white tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5;
+  }
+
+  /* ── Nav Item ── */
+  .nav-item {
+    @apply w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
+           transition-all duration-150 relative cursor-pointer select-none;
+  }
+  .nav-item-default {
+    @apply text-slate-500 hover:text-slate-400 hover:bg-white/[0.04];
+  }
+  .nav-item-active {
+    @apply text-white bg-white/[0.06] border border-white/[0.08];
+  }
+
+  /* ── Command Palette ── */
+  .cmd-palette {
+    background: rgba(15, 19, 30, 0.98);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.5),
+      0 24px 60px rgba(0, 0, 0, 0.6),
+      0 8px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ── Tooltip ── */
+  .tooltip {
+    @apply absolute z-50 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold
+           bg-slate-800 text-white border border-border shadow-xl
+           pointer-events-none whitespace-nowrap;
+  }
+
+  /* ── Sparkline ── */
+  .sparkline-container {
+    @apply overflow-hidden;
+    line-height: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════════ */
+@layer utilities {
+
+  /* Skeleton shimmer */
+  @keyframes shimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.04) 100%
+    );
+    background-size: 800px 100%;
+    animation: shimmer 1.5s infinite ease-in-out;
+    border-radius: 8px;
+  }
+
+  /* Pulse dot */
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+  /* Count-up fade in */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease forwards;
+  }
+
+  /* Slide down */
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-down { animation: slideDown 0.2s ease forwards; }
+
+  /* Scale in */
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .animate-scale-in { animation: scaleIn 0.2s ease forwards; }
+
+  /* Glow utilities */
+  .glow-violet  { box-shadow: 0 0 20px hsl(var(--violet) / 0.25), 0 0 40px hsl(var(--violet) / 0.1); }
+  .glow-emerald { box-shadow: 0 0 20px hsl(var(--success) / 0.3); }
+  .glow-red     { box-shadow: 0 0 20px hsl(var(--error) / 0.3); }
+  .glow-primary { box-shadow: 0 0 20px hsl(var(--primary) / 0.35); }
+
+  /* Deep glass for overlay panels */
+  .glass-deep {
+    background: rgba(10, 13, 20, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  /* Colored border variants for node status rings */
+  .border-glow-violet  { border-color: hsl(var(--violet) / 0.45); }
+  .border-glow-emerald { border-color: hsl(var(--success) / 0.45); }
+  .border-glow-red     { border-color: hsl(var(--error) / 0.45); }
+
+  /* Animated edge dashes for React Flow */
+  @keyframes dash-flow {
+    from { stroke-dashoffset: 18; }
+    to   { stroke-dashoffset: 0;  }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   REACT FLOW OVERRIDES
+═══════════════════════════════════════════════════════ */
+.react-flow__node {
+  @apply rounded-xl border border-border shadow-2xl;
+  background: rgba(13, 17, 28, 0.9) !important;
+  transition: all 0.2s ease;
+}
+.react-flow__node.selected {
+  border-color: hsl(var(--primary)) !important;
+  box-shadow: 0 0 0 2px rgba(242, 94, 34, 0.2) !important;
+}
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  background-color: hsl(var(--primary)) !important;
+  border: 2px solid hsl(var(--background)) !important;
+  @apply shadow-md;
+}
+.react-flow__edge-path {
+  stroke: rgba(255, 255, 255, 0.12) !important;
+  stroke-width: 2px !important;
+  transition: stroke 0.2s ease;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: hsl(var(--primary)) !important;
+}
+.react-flow__controls {
+  @apply !bg-card !border-border !rounded-xl !shadow-2xl !overflow-hidden;
+}
+.react-flow__controls-button {
+  @apply !bg-transparent !border-b !border-border !text-foreground
+         hover:!bg-accent !fill-foreground;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 9px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(242, 94, 34, 0.35);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RECHARTS OVERRIDES
+═══════════════════════════════════════════════════════ */
+.recharts-tooltip-wrapper { outline: none !important; }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255,255,255,0.04) !important;
+}

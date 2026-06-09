@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: n8n-clone-postgres
+    environment:
+      POSTGRES_DB: n8n_clone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - n8n_pgdata:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: n8n-clone-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+volumes:
+  n8n_pgdata:
