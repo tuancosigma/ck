@@ -97,22 +97,12 @@ export class ExecutionsController {
    * via the ?token= query param for this endpoint only (no cookie-based auth in this stack).
    */
   @Get(":id/stream")
-  @UseGuards() // Override class-level guard — token verified manually below
   async streamExecution(
     @Req() req: any,
     @Param("id") id: string,
-    @Query("token") token: string,
     @Res() res: Response,
   ) {
-    // Verify the JWT from query param
-    let userId: string;
-    try {
-      const payload = this.jwtService.verify(token);
-      userId = payload.sub;
-    } catch {
-      res.status(401).json({ message: "Unauthorized" });
-      return;
-    }
+    const userId = req.user.id;
 
     const membership = await this.prisma.workspaceMember.findFirst({
       where: { userId },

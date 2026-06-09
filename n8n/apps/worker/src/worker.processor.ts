@@ -290,39 +290,57 @@ export class WorkerProcessor implements OnModuleInit, OnModuleDestroy {
   private attachExecutionLogListeners(engine: ExecutionEngine, executionId: string) {
     engine.on("node_started", async (data) => {
       const { nodeId, nodeName, nodeType } = data;
-      await this.prisma.executionStep.upsert({
-        where: { executionId_nodeId: { executionId, nodeId } },
-        create: {
-          executionId, nodeId, nodeName, nodeType,
-          status: "RUNNING", input: maskSecrets(data.input || {}) as any, startedAt: new Date(),
-        },
-        update: { status: "RUNNING", startedAt: new Date() },
-      });
+      try {
+        const existing = await this.prisma.executionStep.findUnique({
+          where: { executionId_nodeId: { executionId, nodeId } },
+        });
+        if (existing && (existing.status === "SUCCESS" || existing.status === "FAILED")) {
+          return;
+        }
+        await this.prisma.executionStep.upsert({
+          where: { executionId_nodeId: { executionId, nodeId } },
+          create: {
+            executionId, nodeId, nodeName, nodeType,
+            status: "RUNNING", input: maskSecrets(data.input || {}) as any, startedAt: new Date(),
+          },
+          update: { startedAt: new Date() },
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to log node_started for node "${nodeName}": ${err}`);
+      }
     });
 
     engine.on("node_completed", async (data) => {
       const { nodeId, nodeName, nodeType, output, durationMs } = data;
       const maskedOutput = maskSecrets(output || {});
-      await this.prisma.executionStep.upsert({
-        where: { executionId_nodeId: { executionId, nodeId } },
-        create: {
-          executionId, nodeId, nodeName, nodeType, status: "SUCCESS",
-          input: maskSecrets(data.input || {}) as any, output: maskedOutput as any, durationMs,
-        },
-        update: { status: "SUCCESS", output: maskedOutput as any, durationMs },
-      });
+      try {
+        await this.prisma.executionStep.upsert({
+          where: { executionId_nodeId: { executionId, nodeId } },
+          create: {
+            executionId, nodeId, nodeName, nodeType, status: "SUCCESS",
+            input: maskSecrets(data.input || {}) as any, output: maskedOutput as any, durationMs,
+          },
+          update: { status: "SUCCESS", output: maskedOutput as any, durationMs },
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to log node_completed for node "${nodeName}": ${err}`);
+      }
     });
 
     engine.on("node_failed", async (data) => {
       const { nodeId, nodeName, nodeType, error, durationMs } = data;
-      await this.prisma.executionStep.upsert({
-        where: { executionId_nodeId: { executionId, nodeId } },
-        create: {
-          executionId, nodeId, nodeName, nodeType, status: "FAILED",
-          input: maskSecrets(data.input || {}) as any, error: error as any, durationMs,
-        },
-        update: { status: "FAILED", error: error as any, durationMs },
-      });
+      try {
+        await this.prisma.executionStep.upsert({
+          where: { executionId_nodeId: { executionId, nodeId } },
+          create: {
+            executionId, nodeId, nodeName, nodeType, status: "FAILED",
+            input: maskSecrets(data.input || {}) as any, error: error as any, durationMs,
+          },
+          update: { status: "FAILED", error: error as any, durationMs },
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to log node_failed for node "${nodeName}": ${err}`);
+      }
     });
   }
 
